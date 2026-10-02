@@ -7,7 +7,6 @@ Build-Depends:
  pybuild-plugin-pyproject,
  python3-setuptools,
  dh-python,
- turnkey-netinfo,
 Standards-Version: 4.7.2
 X-Python3-Version: >= 3.13
 Vcs-Git: https://github.com/turnkeylinux/turnkey-version.git
