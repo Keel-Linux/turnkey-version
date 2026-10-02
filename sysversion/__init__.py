@@ -14,6 +14,12 @@ import re
 import subprocess
 
 DEFAULT = "etc/turnkey_version"
+# Keel Linux writes its own identity beside the compatibility file: the same
+# four fields with the keel- prefix (common, decision 0014). It is read first
+# whenever the TurnKey file is asked for, so a caller that names the TurnKey
+# path (turnkey-version, turnkey-sysinfo) reports the Keel identity on a Keel
+# machine and the TurnKey one anywhere else.
+KEEL = "etc/keel_version"
 
 
 class TurnkeyVersionError(Exception):
@@ -21,7 +27,7 @@ class TurnkeyVersionError(Exception):
 
 
 def _parse_turnkey_release(version: str) -> str:
-    m = re.match(r"turnkey-.*?-(\d.*?)-[^\d]", version)
+    m = re.match(r"(?:turnkey|keel)-.*?-(\d.*?)-[^\d]", version)
     if m:
         return m.group(1)
     return ""
@@ -53,12 +59,21 @@ def get_turnkey_version(
     """Return turnkey_version. On error, returns None.
 
     Warning: if fpath is an absolute path, rootfs will be ignored.
+
+    When fpath is the TurnKey file, the Keel file beside it is read first
+    and the TurnKey one is the fallback.
     """
-    try:
-        with open(os.path.join(rootfs, fpath)) as fob:
-            return fob.read().strip()
-    except (OSError, ValueError):
-        pass
+    paths = [fpath]
+    if fpath.lstrip("/") == DEFAULT:
+        paths.insert(0, fpath.replace(DEFAULT, KEEL))
+    for path in paths:
+        try:
+            with open(os.path.join(rootfs, path)) as fob:
+                value = fob.read().strip()
+        except (OSError, ValueError):
+            continue
+        if value:
+            return value
     return None
 
 
@@ -71,7 +86,8 @@ class AppVer:
             turnkey_version = get_turnkey_version(rootfs=rootfs or "/")
         if not turnkey_version:
             raise TurnkeyVersionError("Error: No TurnKey version found")
-        self.turnkey_version = turnkey_version.removeprefix("turnkey-")
+        self.turnkey_version = turnkey_version.removeprefix("turnkey-") \
+            .removeprefix("keel-")
         self.appname, self.tklver, self.codename, self.arch \
                 = self.turnkey_version.rsplit("-", 3)
 

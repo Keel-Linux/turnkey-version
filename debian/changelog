@@ -1,0 +1,12 @@
+turnkey-version (1.1.3+keel1) trixie; urgency=medium
+
+  * Build for Keel Linux, Debian 13.
+  * The version string comes from /etc/keel_version, with /etc/turnkey_version
+    as the fallback: sysversion.get_turnkey_version reads the Keel file first
+    whenever the TurnKey path is asked for, which is what the turnkey-version
+    command and turnkey-sysinfo do, so neither changes. The keel- prefix is
+    accepted beside turnkey- when the string is parsed. One file,
+    sysversion/__init__.py; the "TurnKey GNU/Linux" wording of the summary
+    line is untouched.
+
+ -- Keel Linux maintainers <admin@keellinux.org>  Fri, 02 Oct 2026 17:42:06 +0000
